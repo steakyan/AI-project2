@@ -9,4 +9,5 @@ public interface Term {
 	abstract public String GetName();
 	abstract public void Display();
 	abstract public int GetType();
+	abstract public boolean IfContainVar(Term t);
 }

@@ -7,6 +7,10 @@ public class Predi implements Term{
 	private String PrediName;
 	private ArrayList<Term> Params;
 	
+	public Predi(){
+		
+	}
+	
 	public Predi(String name){
 		this.PrediName = name;
 		this.Params = new ArrayList<Term>();
@@ -20,45 +24,118 @@ public class Predi implements Term{
 		}
 	}
 		
-	public ArrayList<Subs> Unify(Predi b){
+	public ArrayList<Subs> Unify(Predi b) throws Exception{
 		if(this.GetName().equals(b.GetName()) == false){
 			System.out.println("Fail!");
-			System.exit(-1);
-			return null;
+			throw new Exception();
 		}
 		else{
-			return DoUnify(this.GetParams(),b.GetParams());
+			try{
+				ArrayList<Subs> ret = DoUnify(this.GetParams(),b.GetParams());
+				return ret;
+			}catch(Exception e){
+				e.printStackTrace();
+				throw new Exception();				
+			}
 		}
 	}
 	
-	public ArrayList<Subs> DoUnify(ArrayList<Term> a,ArrayList<Term> b){
+	public ArrayList<Subs> DoUnify(ArrayList<Term> a,ArrayList<Term> b) throws Exception{
 		ArrayList<Subs> res = new ArrayList<Subs>();
 		
 		if(a.size() != b.size()){
-			System.out.println("Fail!");
-			System.exit(-1);
+			System.out.println("Fail!");throw new Exception();
 		}
-		else{
-			if(a.size() == 0){
-				return null;
+
+		if(a.size() == 0){
+			return null;
+		}		
+		else if(a.size() == 1){
+			Term a1 = a.get(0);
+			Term b1 = b.get(0);
+			if(a1.GetType() == Const && b1.GetType() == Const){
+				if(a1.GetName().equals(b1.GetName()) == true)
+					return null;
+				else{
+					System.out.println("Fail");throw new Exception();
+				}
 			}
-			else if(a.size() == 1){
-				Term a1 = a.get(0);
-				Term b1 = b.get(0);
-				if(a1.GetType() == Const && b1.GetType() == Const){
-					if(a1.GetName().equals(b1.GetName()) == true)
+			else if(a1.GetType() == Var){
+				Subs t = new Subs(b1,a1);
+				res.add(t);
+				if(b1.GetType() == Const){					
+					return res;
+				}
+				else if(b1.GetType() == Var){
+					if(b1.GetName().equals(a1.GetName()) == true)
 						return null;
 					else{
-						System.out.println("Fail");
-						System.exit(-1);
+						return res;
 					}
 				}
-				else{
-					
+				else if(b1.GetType() == Predi){
+					if(b1.IfContainVar(a1) == true){
+						System.out.println("Fail");	throw new Exception();
+					}
+					else{
+						return res;
+					}
+				}
+			}
+			else if(b1.GetType() == Var){
+				Subs t = new Subs(a1,b1);
+				res.add(t);
+				if(a1.GetType() == Const){					
+					return res;
+				}
+				else if(a1.GetType() == Predi){
+					if(a1.IfContainVar(b1) == true){
+						System.out.println("Fail");
+						throw new Exception();
+					}
+					else{
+						return res;
+					}
 				}
 			}
 		}
+		
+		else{
+			Term a1 = a.get(0);
+			Term b1 = b.get(0);
+			try{
+				ArrayList<Term> aa = new ArrayList<Term>();aa.add(a1);
+				ArrayList<Term> bb = new ArrayList<Term>();bb.add(b1);	
+				ArrayList<Subs> ret = new Predi().DoUnify(aa, bb);				
+				res.addAll(ret);
+				ArrayList<Term> NewA = new ArrayList<Term>();
+				ArrayList<Term> NewB = new ArrayList<Term>();
+				if(res.size() == 1){
+					for(int i = 1;i<a.size();i++){NewA.add(a.get(i).SubsOne(ret.get(0)));}
+					for(int i = 1;i<b.size();i++){NewB.add(b.get(i).SubsOne(ret.get(0)));}
+				}
+				else{
+					for(int i = 1;i<a.size();i++){NewA.add(a.get(i));}
+					for(int i = 1;i<b.size();i++){NewB.add(b.get(i));}
+				}
+				res.addAll(new Predi().DoUnify(NewA,NewB));
+				
+			}catch(Exception e){
+				e.printStackTrace();
+				throw new Exception();				
+			}
+		}
+		
 		return res;
+	}
+	
+	public boolean IfContainVar(Term a1){
+		assert(a1.GetType() == Var);
+		for(int i = 0;i<this.Params.size();i++){
+			if(this.Params.get(i).IfContainVar(a1) == true)
+				return true;
+		}		
+		return false;
 	}
 	
 	public ArrayList<Term> ApplySubs(Subs t, ArrayList<Term> Olds){
@@ -93,6 +170,11 @@ public class Predi implements Term{
 	}
 	
 	@Override
+	public int GetType(){
+		return Predi;
+	}
+	
+	@Override
 	public void Display(){
 		System.out.print( PrediName + "(" );
 		for(int i = 0;i< Params.size();i++){
@@ -102,8 +184,5 @@ public class Predi implements Term{
 		System.out.print(")");
 	}
 	
-	@Override
-	public int GetType(){
-		return Predi;
-	}
+	
 }

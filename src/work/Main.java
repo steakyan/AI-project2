@@ -1,6 +1,9 @@
 package work;
 
 import terms.*;
+
+import java.util.ArrayList;
+
 import formulas.*;
 
 public class Main {
@@ -16,11 +19,24 @@ public class Main {
 		pa.Display();System.out.println();		
 		pb.Display();System.out.println();
 		
+		try{
+			ArrayList<Subs> ret = pa.Unify(pb);
+			for(int i = 0;i<ret.size();i++){
+				ret.get(i).Display();
+				System.out.println();
+			}
+		}catch(Exception e){
+			System.out.println("Fail!");
+			e.printStackTrace();
+		}
+		/*
 		Subs t = new Subs(bill,x);
 		Subs s = new Subs(mob,y);
 		pa.SubsOne(t);
 		pa.Display();System.out.println();
 		pb.SubsOne(s);
-		pb.Display();
+		pb.Display();System.out.println();
+		*/
+		
 	}
 }

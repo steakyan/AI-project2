@@ -17,6 +17,13 @@ public class Var implements Term {
 	}
 	
 	@Override
+	public boolean IfContainVar(Term a1){
+		assert(a1.GetType() == Var);
+		if(a1.GetName().equals(this.VarName) == true) return true;
+		else return false;
+	}
+	
+	@Override
 	public Term SubsOne(Subs t){
 		if(t.GetOldOne().GetName().equals(this.GetName()) == true){
 			return t.GetNewOne();
