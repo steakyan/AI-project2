@@ -6,9 +6,9 @@ public class Subs {
 	private Term NewOne;
 	private Term OldOne;
 	
-	public Subs(Term a,Term b){
-		this.NewOne = a;
-		this.OldOne = b;
+	public Subs(Term newone,Term oldone){
+		this.NewOne = newone;
+		this.OldOne = oldone;
 	}
 	
 

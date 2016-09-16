@@ -11,6 +11,11 @@ public class Predi implements Term{
 		
 	}
 	
+	public Predi(String name,ArrayList<Term> p){
+		this.PrediName = name;
+		this.Params = p;
+	}
+	
 	public Predi(String name){
 		this.PrediName = name;
 		this.Params = new ArrayList<Term>();

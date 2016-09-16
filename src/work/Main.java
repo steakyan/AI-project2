@@ -7,7 +7,28 @@ import java.util.ArrayList;
 import formulas.*;
 
 public class Main {
-	public static void main(String[] args){
+	public static void main(String[] args){	
+		//TestUnify();
+		TestFormula();
+	}
+	
+	public static void TestFormula(){
+		Var x = new Var("x");
+		Var y = new Var("y");
+		Predi f = new Predi("f",x);
+		Predi g = new Predi("g",y);
+		Leaf t1 = new Leaf(f);
+		Leaf t2 = new Leaf(g);
+		And t3 = new And(t1,t2);
+		Bra t4 = new Bra(t3);
+		Exist t5 = new Exist(x,t4);
+		All t6 = new All(y,t5);
+		t6.Display();System.out.println();
+		new CheckFormula().DeleteExist(t6,new ArrayList<Term>()).Display();;
+		
+	}
+	
+	public static void TestUnify(){
 		Var x = new Var("x");
 		Var y = new Var("y");
 		Const bill = new Const("bill");
@@ -29,14 +50,5 @@ public class Main {
 			System.out.println("Fail!");
 			e.printStackTrace();
 		}
-		/*
-		Subs t = new Subs(bill,x);
-		Subs s = new Subs(mob,y);
-		pa.SubsOne(t);
-		pa.Display();System.out.println();
-		pb.SubsOne(s);
-		pb.Display();System.out.println();
-		*/
-		
 	}
 }

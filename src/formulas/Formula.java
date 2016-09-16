@@ -1,5 +1,8 @@
 package formulas;
 
+import java.util.ArrayList;
+import terms.*;
+
 public interface Formula {
 	public final static int AND = 0;
 	public final static int OR = 1;
@@ -12,4 +15,7 @@ public interface Formula {
 	
 	abstract public int GetType();
 	abstract public void Display();
+	abstract public ArrayList<Formula> GetValue();
+	abstract public Formula Subs(String t);
+	abstract public Formula Subs(Subs t);
 }
