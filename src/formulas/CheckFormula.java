@@ -13,6 +13,21 @@ public class CheckFormula {
 	public final static int BRA = 6;
 	public final static int LEAF = 7;
 	
+	public ArrayList<Formula> ConvertFormula(Formula x){
+		x = CheckImply(x); //x.Display();System.out.println();
+		x = NotToAtom(x);//x.Display();System.out.println();
+		x = NormalVar(x);
+		x = ToLeft(x);
+		x = DeleteExist(x,new ArrayList<Term>());
+		x = DeleteAll(x);
+		x = ChangeToAnd(x);
+		ArrayList<Formula> ret = Divide(x);
+		for(int i = 0;i<ret.size();i++){
+			ret.set(i,NormalVar(ret.get(i)));
+		}
+		return ret;
+	}
+	
 	public Formula CheckImply(Formula x){
 		if(x.GetType() == LEAF) return x;
 		if(x.GetType() == IMPLY){
@@ -51,30 +66,30 @@ public class CheckFormula {
 		if(x.GetType() == NOT){
 			Formula res = null;
 			if(x.GetValue().get(0).GetType() == NOT){
-				res = x.GetValue().get(0).GetValue().get(0);
+				res = NotToAtom(x.GetValue().get(0).GetValue().get(0));
 			}
 			else if(x.GetValue().get(0).GetType() == EXIST){
 				Formula t1 = x.GetValue().get(0).GetValue().get(0);
 				Not t2 = new Not(t1);
-				All t3 = new All(((Exist) x.GetValue().get(0)).GetVar(),t2);
+				All t3 = new All(((Exist) x.GetValue().get(0)).GetVar(),NotToAtom(t2));
 				res = t3;			
 			}
 			else if(x.GetValue().get(0).GetType() == ALL){
 				Formula t1 = x.GetValue().get(0).GetValue().get(0);
 				Not t2 = new Not(t1);
-				Exist t3 = new Exist(((All) x.GetValue().get(0)).GetVar(),t2);
+				Exist t3 = new Exist(((All) x.GetValue().get(0)).GetVar(),NotToAtom(t2));
 				res = t3;
 			}
 			else if(x.GetValue().get(0).GetType() == AND){
 				Not t1 = new Not(x.GetValue().get(0).GetValue().get(0));
 				Not t2 = new Not(x.GetValue().get(0).GetValue().get(1));
-				Or t3 = new Or(t1,t2);
+				Or t3 = new Or(NotToAtom(t1),NotToAtom(t2));
 				res = t3;
 			}
 			else if(x.GetValue().get(0).GetType() == OR){
 				Not t1 = new Not(x.GetValue().get(0).GetValue().get(0));
 				Not t2 = new Not(x.GetValue().get(0).GetValue().get(1));
-				And t3 = new And(t1,t2);
+				And t3 = new And(NotToAtom(t1),NotToAtom(t2));
 				res = t3;
 			}
 			else if(x.GetValue().get(0).GetType() == BRA){
@@ -82,7 +97,10 @@ public class CheckFormula {
 				Not t2 = new Not(t1);
 				res = NotToAtom(t2);
 				res = new Bra(res);
-			}		
+			}	
+			else if(x.GetValue().get(0).GetType() == LEAF){
+				return x;
+			}
 			
 			return res;
 		}
@@ -265,6 +283,94 @@ public class CheckFormula {
 		}
 	}
 	
+	public Formula DeleteAll(Formula x){
+		if(x.GetType() == LEAF) return x;
+		else if(x.GetType() == ALL){
+			return DeleteAll(x.GetValue().get(0));
+		}
+		else{
+			Formula res;
+			ArrayList<Formula> ret = new ArrayList<Formula>(); 			
+			for(int i = 0;i<x.GetValue().size();i++){
+				ret.add(DeleteAll(x.GetValue().get(i)));
+			}
+			switch(x.GetType()){
+			case AND: res = new And(ret.get(0),ret.get(1)); break;
+			case OR: res = new Or(ret.get(0),ret.get(1)); break;
+			case NOT: res = new Not(ret.get(0)); break;
+			case IMPLY: res = new Imply(ret.get(0),ret.get(1)); break;
+			case ALL: res = new All(((All) x).GetVar(),ret.get(0)); break;
+			case EXIST: res =  new Exist(((Exist) x).GetVar(),ret.get(0)); break;
+			case BRA: res = new Bra(ret.get(0)); break;
+			case LEAF: res = x ; break;
+			default: res = x;
+			}
+			return res;
+		}
+	}
+
+	public Formula ChangeToAnd(Formula x){
+		if(x.GetType() == LEAF){
+			return x;
+		}
+		else if(x.GetType() == OR){
+			Formula t1 = x.GetValue().get(0);
+			Formula t2 = x.GetValue().get(1);
+			Formula t3 = ChangeToAnd(t1);
+			Formula t4 = ChangeToAnd(t2);
+			if(t3.GetType() == BRA && t3.GetValue().get(0).GetType() == AND){
+				Bra t5 = new Bra(new Or(t3.GetValue().get(0).GetValue().get(0),t4));
+				Bra t6 = new Bra(new Or(t3.GetValue().get(0).GetValue().get(1),t4));
+				And t7 = new And(ChangeToAnd(t5),ChangeToAnd(t6));
+				return t7;
+			}
+			else if(t4.GetType() == BRA && t4.GetValue().get(0).GetType() == AND){
+				Bra t5 = new Bra(new Or(t3,t4.GetValue().get(0).GetValue().get(0)));
+				Bra t6 = new Bra(new Or(t3,t4.GetValue().get(0).GetValue().get(1)));
+				And t7 = new And(ChangeToAnd(t5),ChangeToAnd(t6));
+				return t7;
+			}
+			else{
+				return new Or(t3,t4);
+			}
+		}
+		else{
+			Formula res;
+			ArrayList<Formula> ret = new ArrayList<Formula>(); 			
+			for(int i = 0;i<x.GetValue().size();i++){
+				ret.add(ChangeToAnd(x.GetValue().get(i)));
+			}
+			switch(x.GetType()){
+			case AND: res = new And(ret.get(0),ret.get(1)); break;
+			case OR: res = new Or(ret.get(0),ret.get(1)); break;
+			case NOT: res = new Not(ret.get(0)); break;
+			case IMPLY: res = new Imply(ret.get(0),ret.get(1)); break;
+			case ALL: res = new All(((All) x).GetVar(),ret.get(0)); break;
+			case EXIST: res =  new Exist(((Exist) x).GetVar(),ret.get(0)); break;
+			case BRA: res = new Bra(ret.get(0)); break;
+			case LEAF: res = x ; break;
+			default: res = x;
+			}
+			return res;
+		}
+	}
+	
+	public ArrayList<Formula> Divide(Formula x){
+		ArrayList<Formula> ret = new ArrayList<Formula>();
+		if(x.GetType() == BRA){
+			return Divide(x.GetValue().get(0));
+		}
+		else if(x.GetType() != AND){
+			ret.add(x);
+			return ret;
+		}
+		else{
+			ret.addAll(Divide(x.GetValue().get(0)));
+			ret.addAll(Divide(x.GetValue().get(1)));
+			return ret;
+		}
+	}
+	
 	public ArrayList<String> CheckRepeat(ArrayList<String> Src,ArrayList<String> New){
 		ArrayList<String> repeat = new ArrayList<String>();
 		for(int i = 0;i<New.size();i++){
@@ -280,15 +386,11 @@ public class CheckFormula {
 	
 	public ArrayList<String> GetName(Formula x){
 		ArrayList<String> res = new ArrayList<String>();
-		if(x.GetType() == LEAF){
-			Term t = ((Leaf) x).GetTerm();
-			res.addAll(GetName(t));
+		if(x.GetType() == ALL){
+			res.add(((All) x).GetVar().GetName());
 		}
-		else{
-			ArrayList<Formula> t = x.GetValue();
-			for(int i = 0;i<t.size();i++){
-				res.addAll(GetName(t.get(i)));
-			}
+		else if(  x.GetType() == EXIST){
+			res.add(((Exist) x).GetVar().GetName());
 		}
 		return res;
 	}
